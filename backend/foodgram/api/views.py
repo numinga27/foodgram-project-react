@@ -10,28 +10,30 @@ from rest_framework import generics, filters, mixins, status,  viewsets
 from rest_framework.decorators import action, api_view
 from rest_framework.pagination import LimitOffsetPagination
 from rest_framework.response import Response
+from rest_framework.authtoken.views import ObtainAuthToken
 from rest_framework.permissions import (
     SAFE_METHODS, AllowAny,
     IsAuthenticated,
     IsAuthenticatedOrReadOnly
 )
-from .models import (
-    Ingredient, Tag, Recipe, Recipts_Ingredients, Followers,
-    Favorite_Recipts, Shopping
+from posts.models import (
+    Ingredient, Tag, Recipe, Followers,
+    Favorite_Recipe, Shopping
 )
 from users.models import User
 
-from .filters import TitleFilter
-from .permissions import AdminModerator, IsAdmin, IsAdminOrReadOnly
+from .filter import IngredientFilter, RecipeFilter
+from .permisions import IsAdminOrReadOnly
 from .serializers import (
     IngredientSerializer,
-    TagSerializer, RecipeIngredientSerializer,
+    TagSerializer,
     SubscribeRecipeSerializer, RecipeWriteSerializer,
     RecipeReadSerializer,
     FollowersSerializer,
     UserListSerializer,
     UserCreateSerializer,
-    UserPasswordSerializer
+    UserPasswordSerializer,
+    TokenSerializer
 )
 
 
@@ -46,7 +48,7 @@ class RecipesViewSet(viewsets.ModelViewSet):
     """Рецепты."""
 
     queryset = Recipe.objects.all()
-    # filterset_class = RecipeFilter
+    filterset_class = RecipeFilter
     permission_classes = (IsAuthenticatedOrReadOnly,)
 
     def get_serializer_class(self):
@@ -57,7 +59,7 @@ class RecipesViewSet(viewsets.ModelViewSet):
     def get_queryset(self):
         return Recipe.objects.annotate(
             is_favorited=Exists(
-                Favorite_Recipts.objects.filter(
+                Favorite_Recipe.objects.filter(
                     user=self.request.user, recipe=OuterRef('id'))),
             is_in_shopping_cart=Exists(
                 Shopping.objects.filter(
@@ -93,7 +95,7 @@ class IngredientsViewSet(
 
     queryset = Ingredient.objects.all()
     serializer_class = IngredientSerializer
-    # filterset_class = IngredientFilter
+    filterset_class = IngredientFilter
 
 
 class AddAndDelSubscribe(
@@ -235,3 +237,10 @@ class AddDelFavoriteRecipe(
 
     def perform_destroy(self, instance):
         self.request.user.favorite_recipe.recipe.remove(instance)
+
+
+class AuthToken(ObtainAuthToken):
+    """Авторизация пользователя."""
+
+    serializer_class = TokenSerializer
+    permission_classes = (AllowAny,)

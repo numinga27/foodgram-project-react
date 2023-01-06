@@ -7,7 +7,7 @@ from rest_framework.generics import get_object_or_404
 from rest_framework.validators import UniqueValidator
 from django.contrib.auth import authenticate, get_user_model
 
-from .models import (
+from posts.models import (
     Ingredient, Tag, Recipe, Recipts_Ingredients,
     Followers
 )
@@ -92,18 +92,21 @@ class FollowersSerializer(serializers.ModelSerializer):
             recipes,
             many=True).data
 
-    class TokenSerializer(serializers.Serializer):
-        email = serializers.CharField(
-            label='Email',
-            write_only=True)
+
+class TokenSerializer(serializers.Serializer):
+    email = serializers.CharField(
+        label='Email',
+        write_only=True)
     password = serializers.CharField(
         label='Пароль',
         style={'input_type': 'password'},
         trim_whitespace=False,
-        write_only=True)
+        write_only=True
+    )
     token = serializers.CharField(
         label='Токен',
-        read_only=True)
+        read_only=True
+    )
 
     def validate(self, attrs):
         email = attrs.get('email')
@@ -309,5 +312,3 @@ class UserListSerializer(
         fields = (
             'email', 'id', 'username',
             'first_name', 'last_name', 'is_subscribed')
-
-
