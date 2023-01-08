@@ -43,10 +43,10 @@ class RecipeAdmin(admin.ModelAdmin):
     def get_ingredients(self, obj):
         return '\n '.join([
             f'{item["ingredient__name"]} - {item["amount"]}'
-            f' {item["ingredient__measurement_unit"]}.'
-            for item in obj.recipe.values(
+            f' {item["ingredient__quantity"]}.'
+            for item in obj.recipts.values(
                 'ingredient__name',
-                'amount', 'ingredient__measurement_unit')])
+                'amount', 'ingredient__quantity')])
 
     @admin.display(description='В избранном')
     def get_favorite_count(self, obj):
@@ -106,8 +106,8 @@ class SoppingCartAdmin(admin.ModelAdmin):
     @admin.display(description='Рецепты')
     def get_recipe(self, obj):
         return [
-            f'{item["name"]} ' for item in obj.recipe.values('name')[:5]]
+            f'{item["name"]} ' for item in obj.recipts.values('name')[:5]]
 
     @admin.display(description='В избранных')
     def get_count(self, obj):
-        return obj.recipe.count()
+        return obj.recipts.count()

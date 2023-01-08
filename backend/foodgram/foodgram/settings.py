@@ -143,6 +143,6 @@ REST_FRAMEWORK = {
         'django_filters.rest_framework.DjangoFilterBackend',
         'rest_framework.filters.SearchFilter',
     ],
-    # 'DEFAULT_PAGINATION_CLASS': 'api.pagination.LimitPageNumberPagination',
-    # 'PAGE_SIZE': 5,
+    'DEFAULT_PAGINATION_CLASS': 'api.pangination.LimitPage',
+    'PAGE_SIZE': 5,
 }
