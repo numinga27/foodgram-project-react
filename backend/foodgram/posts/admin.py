@@ -2,8 +2,8 @@ from django.contrib import admin
 
 from .models import (Ingredient, Followers, Favorite_Recipe, Tag, Recipe,
                      Shopping)
-from .permession import Recipe_Ingredient_Admin
 
+from .permession import Recipe_Ingredient_Admin
 EMPTY_MSG = '-пусто-'
 
 
@@ -39,14 +39,14 @@ class RecipeAdmin(admin.ModelAdmin):
         list_ = [_.name for _ in obj.tags.all()]
         return ', '.join(list_)
 
-    @admin.display(description=' Ингредиенты ')
+    @admin.display(description=' Ингредиенты')
     def get_ingredients(self, obj):
         return '\n '.join([
             f'{item["ingredient__name"]} - {item["amount"]}'
-            f' {item["ingredient__quantity"]}.'
-            for item in obj.recipts.values(
+            f' {item["ingredient__measurement_unit"]}.'
+            for item in obj.recipe.values(
                 'ingredient__name',
-                'amount', 'ingredient__quantity')])
+                'amount', 'ingredient__measurement_unit')])
 
     @admin.display(description='В избранном')
     def get_favorite_count(self, obj):
@@ -64,9 +64,9 @@ class TagAdmin(admin.ModelAdmin):
 @admin.register(Ingredient)
 class IngredientAdmin(admin.ModelAdmin):
     list_display = (
-        'id', 'name', 'quantity',)
+        'id', 'name', 'measurement_unit',)
     search_fields = (
-        'name', 'quantity',)
+        'name', 'measurement_unit',)
     empty_value_display = EMPTY_MSG
 
 

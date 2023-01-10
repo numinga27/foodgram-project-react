@@ -1,4 +1,6 @@
 from django.db import models
+from django.dispatch import receiver
+from django.db.models.signals import post_save
 
 
 from users.models import User
@@ -8,7 +10,7 @@ class Ingredient(models.Model):
     name = models.CharField(
         'Название ингредиента',
         max_length=200)
-    quantity = models.CharField(
+    measurement_unit = models.CharField(
         'Единица измерения ингредиента',
         max_length=200
     )
@@ -19,7 +21,7 @@ class Ingredient(models.Model):
         verbose_name_plural = 'Ингредиенты'
 
     def __str__(self):
-        return f'{self.name}, {self.quantity}.'
+        return f'{self.name}, {self.measurement_unit}.'
 
 
 class Tag(models.Model):
@@ -112,6 +114,15 @@ class Recipts_Ingredients(models.Model):
         default=1,
     )
 
+    class Meta:
+        verbose_name = 'Количество ингредиента'
+        verbose_name_plural = 'Количество ингредиентов'
+        ordering = ['-id']
+        constraints = [
+            models.UniqueConstraint(
+                fields=['recipe', 'ingredient'],
+                name='unique ingredient')]
+
 
 class Followers(models.Model):
     user = models.ForeignKey(
@@ -158,6 +169,12 @@ class Favorite_Recipe(models.Model):
         verbose_name='Избранный рецепт'
     )
 
+    @receiver(post_save, sender=User)
+    def create_favorite_recipe(
+            sender, instance, created, **kwargs):
+        if created:
+            return Favorite_Recipe.objects.create(user=instance)
+
 
 class Shopping(models.Model):
     user = models.OneToOneField(
@@ -166,9 +183,15 @@ class Shopping(models.Model):
         related_name='shopping',
         null=True,
         verbose_name='Пользователь'
-        )
+    )
     recipe = models.ManyToManyField(
         Recipe,
         related_name='shopping',
         verbose_name='Покупка'
     )
+
+    @receiver(post_save, sender=User)
+    def create_shopping_cart(
+            sender, instance, created, **kwargs):
+        if created:
+            return Shopping.objects.create(user=instance)

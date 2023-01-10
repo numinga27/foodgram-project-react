@@ -34,13 +34,14 @@ class RecipeIngredientSerializer(serializers.ModelSerializer):
         source='ingredient.id')
     name = serializers.ReadOnlyField(
         source='ingredient.name')
-    amount = serializers.ReadOnlyField(
-        source='ingredient.amount')
+    measurement_unit = serializers.ReadOnlyField(
+        source='ingredient.measurement_unit')
 
     class Meta:
         model = Recipts_Ingredients
         fields = (
-            'id', 'name', 'amount', 'quantity')
+            'id', 'name', 'measurement_unit', 'amount'
+            )
 
 
 class SubscribeRecipeSerializer(serializers.ModelSerializer):
@@ -52,11 +53,11 @@ class SubscribeRecipeSerializer(serializers.ModelSerializer):
 
 class IngredientsEditSerializer(serializers.ModelSerializer):
     id = serializers.IntegerField()
-    quantity = serializers.IntegerField()
+    amount = serializers.IntegerField()
 
     class Meta:
         model = Ingredient
-        fields = ('id', 'quantity')
+        fields = ('id', 'amount')
 
 
 class FollowersSerializer(serializers.ModelSerializer):
@@ -250,7 +251,7 @@ class RecipeReadSerializer(serializers.ModelSerializer):
     ingredients = RecipeIngredientSerializer(
         many=True,
         required=True,
-        source='recipe')
+        source='recipts')
     is_favorited = serializers.BooleanField(
         read_only=True)
     is_in_shopping_cart = serializers.BooleanField(
