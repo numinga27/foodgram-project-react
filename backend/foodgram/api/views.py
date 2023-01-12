@@ -22,6 +22,7 @@ from posts.models import (
     Ingredient, Tag, Recipe, Followers,
     Favorite_Recipe, Shopping
 )
+from .pangination import LimitPage
 from users.models import User
 
 from .filter import IngredientFilter, RecipeFilter
@@ -53,6 +54,7 @@ class RecipesViewSet(viewsets.ModelViewSet):
     queryset = Recipe.objects.all()
     filterset_class = RecipeFilter
     permission_classes = (IsAuthenticatedOrReadOnly,)
+    pagination_class = LimitPage
 
     def get_serializer_class(self):
         if self.request.method in SAFE_METHODS:
@@ -261,7 +263,7 @@ class AddDelShoppingCart(
 
     def create(self, request, *args, **kwargs):
         instance = self.get_object()
-        request.user.shopping_cart.recipe.add(instance)
+        request.user.shopping.recipe.add(instance)
         serializer = self.get_serializer(instance)
         return Response(serializer.data, status=status.HTTP_201_CREATED)
 
