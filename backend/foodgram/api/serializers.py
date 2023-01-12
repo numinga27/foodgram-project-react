@@ -1,10 +1,8 @@
-import datetime as dt
 import django.contrib.auth.password_validation as validators
 from django.contrib.auth.hashers import make_password
 from drf_base64.fields import Base64ImageField
 from rest_framework import serializers
 from rest_framework.generics import get_object_or_404
-from rest_framework.validators import UniqueValidator
 from django.contrib.auth import authenticate, get_user_model
 
 from posts.models import (
@@ -41,7 +39,7 @@ class RecipeIngredientSerializer(serializers.ModelSerializer):
         model = Recipts_Ingredients
         fields = (
             'id', 'name', 'measurement_unit', 'amount'
-            )
+        )
 
 
 class SubscribeRecipeSerializer(serializers.ModelSerializer):
@@ -195,7 +193,7 @@ class RecipeWriteSerializer(serializers.ModelSerializer):
         recipe = Recipe.objects.create(**validated_data)
         recipe.tags.set(tags)
         self.create_ingredients(ingredients, recipe)
-        
+
         return recipe
 
     def update(self, instance, validated_data):

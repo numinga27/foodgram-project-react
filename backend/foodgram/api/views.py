@@ -78,7 +78,7 @@ class RecipesViewSet(viewsets.ModelViewSet):
             is_favorited=Value(False),
         ).select_related('author').prefetch_related(
             'tags', 'ingredients', 'recipe',
-            'shopping_cart', 'favorite_recipe')
+            'shopping', 'favorite_recipe')
 
     def perform_create(self, serializer):
         serializer.save(author=self.request.user)
@@ -268,7 +268,7 @@ class AddDelShoppingCart(
         return Response(serializer.data, status=status.HTTP_201_CREATED)
 
     def perform_destroy(self, instance):
-        self.request.user.shopping_cart.recipe.remove(instance)
+        self.request.user.shopping.recipe.remove(instance)
 
 
 class AddDelFavoriteRecipe(
