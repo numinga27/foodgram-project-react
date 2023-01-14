@@ -1,15 +1,12 @@
 import django.contrib.auth.password_validation as validators
+from django.contrib.auth import authenticate, get_user_model
 from django.contrib.auth.hashers import make_password
 from drf_base64.fields import Base64ImageField
 from rest_framework import serializers
 from rest_framework.generics import get_object_or_404
-from django.contrib.auth import authenticate, get_user_model
 
-from posts.models import (
-    Ingredient, Tag, Recipe, Recipts_Ingredients,
-    Followers
-)
-
+from posts.models import (Followers, Ingredient, Recipe, Recipies_Ingredients,
+                          Tag)
 
 User = get_user_model()
 
@@ -36,7 +33,7 @@ class RecipeIngredientSerializer(serializers.ModelSerializer):
         source='ingredient.measurement_unit')
 
     class Meta:
-        model = Recipts_Ingredients
+        model = Recipies_Ingredients
         fields = (
             'id', 'name', 'measurement_unit', 'amount'
         )
@@ -182,7 +179,7 @@ class RecipeWriteSerializer(serializers.ModelSerializer):
 
     def create_ingredients(self, ingredients, recipe):
         for ingredient in ingredients:
-            Recipts_Ingredients.objects.create(
+            Recipies_Ingredients.objects.create(
                 recipe=recipe,
                 ingredient_id=ingredient.get('id'),
                 amount=ingredient.get('amount'), )

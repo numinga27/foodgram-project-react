@@ -1,7 +1,7 @@
 from django.db import models
-from django.dispatch import receiver
+from django.core import validators
 from django.db.models.signals import post_save
-
+from django.dispatch import receiver
 
 from users.models import User
 
@@ -75,7 +75,7 @@ class Recipe(models.Model):
     )
     ingredients = models.ManyToManyField(
         Ingredient,
-        through='Recipts_Ingredients'
+        through='Recipies_Ingredients'
     )
     tags = models.ManyToManyField(
         Tag,
@@ -83,7 +83,9 @@ class Recipe(models.Model):
         related_name='recipes'
     )
     cooking_time = models.PositiveSmallIntegerField(
-        verbose_name='Время приготовления в минутах'
+        verbose_name='Время приготовления в минутах',
+        validators=[validators.MinValueValidator(
+            1, message='Мин. время приготовления 1 минута'), ]
     )
     pub_date = models.DateTimeField(
         'Дата публикации',
@@ -99,7 +101,7 @@ class Recipe(models.Model):
         return f'{self.author.email}, {self.name}'
 
 
-class Recipts_Ingredients(models.Model):
+class Recipies_Ingredients(models.Model):
     recipe = models.ForeignKey(
         Recipe,
         on_delete=models.CASCADE,
@@ -184,11 +186,20 @@ class Shopping(models.Model):
         null=True,
         verbose_name='Пользователь'
     )
-    recipe = models.ManyToManyField(
+    recipe = models.ForeignKey(
         Recipe,
+        null=True,
+        on_delete=models.CASCADE,
         related_name='shopping',
         verbose_name='Покупка'
     )
+
+    class Meta:
+        constraints = [
+            models.UniqueConstraint(
+                fields=['user', 'recipe'],
+                name='unique_shopping')
+                ]
 
     @receiver(post_save, sender=User)
     def create_shopping_cart(

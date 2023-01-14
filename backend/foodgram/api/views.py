@@ -1,51 +1,35 @@
 import io
 
-from django.shortcuts import get_object_or_404
-from django.db.models.expressions import Exists, OuterRef, Value
-from django.db.models.aggregates import Count, Sum
 from django.contrib.auth.hashers import make_password
+from django.db.models.aggregates import Count, Sum
+from django.db.models.expressions import Exists, OuterRef, Value
 from django.http import FileResponse
+from django.shortcuts import get_object_or_404
 from djoser.views import UserViewSet
+from posts.models import (Favorite_Recipe, Followers, Ingredient, Recipe,
+                          Shopping, Tag)
 from reportlab.pdfbase import pdfmetrics
 from reportlab.pdfbase.ttfonts import TTFont
 from reportlab.pdfgen import canvas
-from rest_framework import generics, status,  viewsets
-from rest_framework.decorators import action, api_view
+from rest_framework import generics, status, viewsets
 from rest_framework.authtoken.views import ObtainAuthToken
+from rest_framework.decorators import action
+from rest_framework.permissions import (SAFE_METHODS, AllowAny,
+                                        IsAuthenticated,
+                                        IsAuthenticatedOrReadOnly)
 from rest_framework.response import Response
-from rest_framework.permissions import (
-    SAFE_METHODS, AllowAny,
-    IsAuthenticated,
-    IsAuthenticatedOrReadOnly
-)
-from posts.models import (
-    Ingredient, Tag, Recipe, Followers,
-    Favorite_Recipe, Shopping
-)
-from .pangination import LimitPage
 from users.models import User
 
-from .filter import IngredientFilter, RecipeFilter
-from .permisions import IsAdminOrReadOnly
-from .serializers import (
-    IngredientSerializer,
-    TagSerializer,
-    SubscribeRecipeSerializer, RecipeWriteSerializer,
-    RecipeReadSerializer,
-    FollowersSerializer,
-    UserListSerializer,
-    UserCreateSerializer,
-    UserPasswordSerializer,
-    TokenSerializer
-)
+from .filters import IngredientFilter, RecipeFilter
+from .mixins import PermissionAndPaginationMixin
+from .pangination import LimitPage
+from .serializers import (FollowersSerializer, IngredientSerializer,
+                          RecipeReadSerializer, RecipeWriteSerializer,
+                          SubscribeRecipeSerializer, TagSerializer,
+                          TokenSerializer, UserCreateSerializer,
+                          UserListSerializer)
+
 SHOP = 'shopbasket.pdf'
-
-
-class PermissionAndPaginationMixin:
-    """Миксина для списка тегов и ингридиентов."""
-
-    permission_classes = (IsAdminOrReadOnly,)
-    pagination_class = None
 
 
 class RecipesViewSet(viewsets.ModelViewSet):
@@ -147,7 +131,7 @@ class IngredientsViewSet(
     filterset_class = IngredientFilter
 
 
-class AddAndDelSubscribe(
+class AddAndDeleteSubscribe(
         generics.RetrieveDestroyAPIView,
         generics.ListCreateAPIView):
     """Подписка и отписка от пользователя."""
@@ -215,8 +199,7 @@ class UsersViewSet(UserViewSet):
     def subscriptions(self, request):
         """Получить на кого пользователь подписан."""
 
-        user = request.user
-        queryset = Followers.objects.filter(user=user)
+        queryset = Followers.objects.filter(user=request.user)
         pages = self.paginate_queryset(queryset)
         serializer = FollowersSerializer(
             pages, many=True,
@@ -238,7 +221,7 @@ class GetObjectMixin:
         return recipe
 
 
-class AddDelShoppingCart(
+class AddDeleteShoppingCart(
         GetObjectMixin,
         generics.RetrieveDestroyAPIView,
         generics.ListCreateAPIView
@@ -255,7 +238,7 @@ class AddDelShoppingCart(
         self.request.user.shopping.recipe.remove(instance)
 
 
-class AddDelFavoriteRecipe(
+class AddDeleteFavoriteRecipe(
         GetObjectMixin,
         generics.RetrieveDestroyAPIView,
         generics.ListCreateAPIView

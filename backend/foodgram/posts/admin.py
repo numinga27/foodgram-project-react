@@ -1,9 +1,9 @@
 from django.contrib import admin
 
-from .models import (Ingredient, Followers, Favorite_Recipe, Tag, Recipe,
-                     Shopping)
-
+from .models import (Favorite_Recipe, Followers, Ingredient, Recipe, Shopping,
+                     Tag)
 from .permession import Recipe_Ingredient_Admin
+
 EMPTY_MSG = '-пусто-'
 
 
@@ -16,7 +16,7 @@ if not hasattr(admin, "display"):
     setattr(admin, "display", display)
 
 
-@ admin.register(Recipe)
+@admin.register(Recipe)
 class RecipeAdmin(admin.ModelAdmin):
     list_display = (
         'id', 'get_author', 'name', 'text',
