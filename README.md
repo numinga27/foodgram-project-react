@@ -1,5 +1,5 @@
 # Продуктовый помощник Foodgram 
-Проект доступен по адресу http://51.250.30.50/recipes
+Проект доступен по адресу http://51.250.30.50/signin
 
 ## Описание проекта Foodgram
 «Продуктовый помощник»: приложение, на котором пользователи публикуют рецепты, подписываться на публикации других авторов и добавлять рецепты в избранное. Сервис «Список покупок» позволит пользователю создавать список продуктов, которые нужно купить для приготовления выбранных блюд.
@@ -11,9 +11,9 @@
 ### Создайте папку infra:
 
 mkdir infra
-Перенести файлы docker-compose.yml и default.conf на сервер.
+Перенести файлы docker-compose.yml и nginx.conf на сервер.
 scp docker-compose.yml username@server_ip:/home/<username>/
-scp default.conf <username>@<server_ip>:/home/<username>/
+scp nginx.conf <username>@<server_ip>:/home/<username>/
 Создайте файл .env в дериктории infra:
 touch .env
 Заполнить в настройках репозитория секреты .env
@@ -25,11 +25,11 @@ DB_HOST=db
 DB_PORT='5432'
 SECRET_KEY=
 ALLOWED_HOSTS=
-Скопировать на сервер настройки docker-compose.yml, default.conf из папки infra.
+Скопировать на сервер настройки docker-compose.yml, nginx.conf из папки infra.
 
 Запуск проекта через Docker
 В папке infra выполнить команду, что бы собрать контейнер:
-sudo docker-compose up -d
+sudo docker compose up -d
 Для доступа к контейнеру выполните следующие команды:
 
 sudo docker-compose exec backend python manage.py makemigrations
