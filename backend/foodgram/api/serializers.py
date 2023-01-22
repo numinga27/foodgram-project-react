@@ -6,18 +6,18 @@ from rest_framework import serializers
 from rest_framework.generics import get_object_or_404
 
 from posts.models import (Followers, Ingredient, Recipe, Recipies_Ingredients,
-                          Tag)
+                          Tag,Shopping,Favorite_Recipe)
 
 User = get_user_model()
 
 
-class IngredientSerializer(serializers.Serializer):
+class IngredientSerializer(serializers.ModelSerializer):
     class Meta:
         model = Ingredient
         fields = '__all__'
 
 
-class TagSerializer(serializers.Serializer):
+class TagSerializer(serializers.ModelSerializer):
     class Meta:
         model = Tag
         fields = (
@@ -247,10 +247,35 @@ class RecipeReadSerializer(serializers.ModelSerializer):
         many=True,
         required=True,
         source='recipe')
-    is_favorited = serializers.BooleanField(
-        read_only=True)
-    is_in_shopping_cart = serializers.BooleanField(
-        read_only=True)
+    is_favorited = serializers.SerializerMethodField()
+    is_in_shopping_cart = serializers.SerializerMethodField()
+
+    def __is_something(self, obj, model):
+        if not self.context['request'].user.is_authenticated:
+            return False
+
+        return model.objects.filter(
+            recipe=obj, user=self.context['request'].user).exists()
+
+    def get_is_favorited(self, obj):
+        return self.__is_something(obj, Favorite_Recipe)
+
+    def get_is_in_shopping_cart(self, obj):
+        return self.__is_something(obj, Shopping)
+
+    # def get_is_in_shopping_cart(self, obj):
+    #     """Находится ли рецепт в списке  покупок."""
+    #     user = self.context.get('request').user
+    #     if user.is_anonymous:
+    #         return False
+    #     return user.shopping_cart.filter(id=obj.id).exists()
+
+    # def get_is_favorited(self, obj):
+    #     """Находится ли рецепт в избранном."""
+    #     user = self.context.get('request').user
+    #     if user.is_anonymous:
+    #         return False
+    #     return user.favorite_recipe.filter(id=obj.id).exists()
 
     class Meta:
         model = Recipe

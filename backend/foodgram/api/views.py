@@ -13,7 +13,7 @@ from reportlab.pdfbase.ttfonts import TTFont
 from reportlab.pdfgen import canvas
 from rest_framework import generics, status, viewsets
 from rest_framework.authtoken.views import ObtainAuthToken
-from rest_framework.decorators import action
+from rest_framework.decorators import action, api_view
 from rest_framework.permissions import (SAFE_METHODS, AllowAny,
                                         IsAuthenticated,
                                         IsAuthenticatedOrReadOnly)
@@ -27,16 +27,19 @@ from .serializers import (FollowersSerializer, IngredientSerializer,
                           RecipeReadSerializer, RecipeWriteSerializer,
                           SubscribeRecipeSerializer, TagSerializer,
                           TokenSerializer, UserCreateSerializer,
-                          UserListSerializer)
+                          UserListSerializer, UserPasswordSerializer)
 
 SHOP = 'shopbasket.pdf'
+IN_CART = ('1', 'true',)
+NOT_IN_CART = ('0', 'false',)
+
 
 
 class RecipesViewSet(viewsets.ModelViewSet):
     """Рецепты."""
 
     queryset = Recipe.objects.all()
-    filterset_class = RecipeFilter
+    # filterset_class = RecipeFilter
     permission_classes = (IsAuthenticatedOrReadOnly,)
     pagination_class = LimitPage
 
@@ -45,24 +48,52 @@ class RecipesViewSet(viewsets.ModelViewSet):
             return RecipeReadSerializer
         return RecipeWriteSerializer
 
+    # def get_queryset(self):
+    #     return Recipe.objects.annotate(
+    #         is_favorited=Exists(
+    #             Favorite_Recipe.objects.filter(
+    #                 user=self.request.user, recipe=OuterRef('id'))),
+    #         is_in_shopping_cart=Exists(
+    #             Shopping.objects.filter(
+    #                 user=self.request.user,
+    #                 recipe=OuterRef('id')))
+    #     ).select_related('author').prefetch_related(
+    #         'tags', 'ingredients', 'recipe',
+    #         'shopping_cart', 'favorite_recipe'
+    #     ) if self.request.user.is_authenticated else Recipe.objects.annotate(
+    #         is_in_shopping_cart=Value(False),
+    #         is_favorited=Value(False),
+    #     ).select_related('author').prefetch_related(
+    #         'tags', 'ingredients', 'recipe',
+    #         'shopping_cart', 'favorite_recipe')
+    
     def get_queryset(self):
-        return Recipe.objects.annotate(
-            is_favorited=Exists(
-                Favorite_Recipe.objects.filter(
-                    user=self.request.user, recipe=OuterRef('id'))),
-            is_in_shopping_cart=Exists(
-                Shopping.objects.filter(
-                    user=self.request.user,
-                    recipe=OuterRef('id')))
-        ).select_related('author').prefetch_related(
-            'tags', 'ingredients', 'recipe',
-            'shopping', 'favorite_recipe'
-        ) if self.request.user.is_authenticated else Recipe.objects.annotate(
-            is_in_shopping_cart=Value(False),
-            is_favorited=Value(False),
-        ).select_related('author').prefetch_related(
-            'tags', 'ingredients', 'recipe',
-            'shopping', 'favorite_recipe')
+        """Получает queryset в соответствии с параметрами запроса."""
+        queryset = self.queryset
+        tags = self.request.query_params.getlist('tags')
+        if tags:
+            queryset = queryset.filter(
+                tags__slug__in=tags).distinct()
+
+        author = self.request.query_params.get('author')
+        if author:
+            queryset = queryset.filter(author=author)
+
+        user = self.request.user
+        if user.is_anonymous:
+            return queryset
+        is_in_shopping = self.request.query_params.get('is_in_shopping_cart')
+        if is_in_shopping in IN_CART:
+            queryset = queryset.filter(shopping_cart=user.id)
+        elif is_in_shopping in NOT_IN_CART:
+            queryset = queryset.exclude(shopping_cart=user.id)
+
+        is_favorited = self.request.query_params.get('is_favorited')
+        if is_favorited in IN_CART:
+            queryset = queryset.filter(favorite_recipe=user.id)
+        if is_favorited in NOT_IN_CART:
+            queryset = queryset.exclude(favorite_recipe=user.id)
+        return queryset
 
     def perform_create(self, serializer):
         serializer.save(author=self.request.user)
@@ -76,7 +107,7 @@ class RecipesViewSet(viewsets.ModelViewSet):
 
         buffer = io.BytesIO()
         page = canvas.Canvas(buffer)
-        pdfmetrics.registerFont(TTFont('Vera', 'Vera.ttf'))
+        pdfmetrics.registerFont(TTFont('Tahoma', 'Tahoma.ttf'))
         x_position, y_position = 50, 800
         shopping_cart = (
             request.user.shopping_cart.recipe.
@@ -84,7 +115,7 @@ class RecipesViewSet(viewsets.ModelViewSet):
                 'ingredients__name',
                 'ingredients__measurement_unit'
             ).annotate(amount=Sum('recipe__amount')).order_by())
-        page.setFont('Vera', 14)
+        page.setFont('Tahoma', 14)
         if shopping_cart:
             indent = 20
             page.drawString(x_position, y_position, 'Cписок покупок:')
@@ -102,7 +133,7 @@ class RecipesViewSet(viewsets.ModelViewSet):
             buffer.seek(0)
             return FileResponse(
                 buffer, as_attachment=True, filename=SHOP)
-        page.setFont('Vera', 24)
+        page.setFont('Tahoma', 24)
         page.drawString(
             x_position,
             y_position,
@@ -230,12 +261,12 @@ class AddDeleteShoppingCart(
 
     def create(self, request, *args, **kwargs):
         instance = self.get_object()
-        request.user.shopping.recipe.add(instance)
+        request.user.shopping_cart.recipe.add(instance)
         serializer = self.get_serializer(instance)
         return Response(serializer.data, status=status.HTTP_201_CREATED)
 
     def perform_destroy(self, instance):
-        self.request.user.shopping.recipe.remove(instance)
+        self.request.user.shopping_cart.recipe.remove(instance)
 
 
 class AddDeleteFavoriteRecipe(
@@ -260,3 +291,20 @@ class AuthToken(ObtainAuthToken):
 
     serializer_class = TokenSerializer
     permission_classes = (AllowAny,)
+
+
+@api_view(['post'])
+def set_password(request):
+    """Изменить пароль."""
+
+    serializer = UserPasswordSerializer(
+        data=request.data,
+        context={'request': request})
+    if serializer.is_valid():
+        serializer.save()
+        return Response(
+            {'message': 'Пароль изменен!'},
+            status=status.HTTP_201_CREATED)
+    return Response(
+        {'error': 'Введите верные данные!'},
+        status=status.HTTP_400_BAD_REQUEST)

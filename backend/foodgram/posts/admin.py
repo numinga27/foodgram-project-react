@@ -100,14 +100,15 @@ class FavoriteRecipeAdmin(admin.ModelAdmin):
 @admin.register(Shopping)
 class SoppingCartAdmin(admin.ModelAdmin):
     list_display = (
-        'id', 'user', 'get_recipe', 'get_count')
+        'id', 'user', 'recipe')
     empty_value_display = EMPTY_MSG
 
     @admin.display(description='Рецепты')
-    def get_recipe(self, obj):
+    def recipe(self, obj):
+        print(obj.recipe.values)
         return [
-            f'{item["name"]} ' for item in obj.recipts.values('name')[:5]]
+            f'{item["name"]} ' for item in obj.recipe.values('name')[:5]]
 
     @admin.display(description='В избранных')
-    def get_count(self, obj):
-        return obj.recipts.count()
+    def count(self, obj):
+        return obj.recipe.count()

@@ -182,24 +182,15 @@ class Shopping(models.Model):
     user = models.OneToOneField(
         User,
         on_delete=models.CASCADE,
-        related_name='shopping',
+        related_name='shopping_cart',
         null=True,
         verbose_name='Пользователь'
     )
-    recipe = models.ForeignKey(
+    recipe = models.ManyToManyField(
         Recipe,
-        null=True,
-        on_delete=models.CASCADE,
-        related_name='shopping',
+        related_name='shopping_cart',
         verbose_name='Покупка'
     )
-
-    class Meta:
-        constraints = [
-            models.UniqueConstraint(
-                fields=['user', 'recipe'],
-                name='unique_shopping')
-                ]
 
     @receiver(post_save, sender=User)
     def create_shopping_cart(
