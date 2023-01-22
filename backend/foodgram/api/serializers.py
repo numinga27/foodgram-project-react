@@ -6,7 +6,7 @@ from rest_framework import serializers
 from rest_framework.generics import get_object_or_404
 
 from posts.models import (Followers, Ingredient, Recipe, Recipies_Ingredients,
-                          Tag,Shopping,Favorite_Recipe)
+                          Tag, Shopping, Favorite_Recipe)
 
 User = get_user_model()
 
