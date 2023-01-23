@@ -5,8 +5,8 @@ from drf_base64.fields import Base64ImageField
 from rest_framework import serializers
 from rest_framework.generics import get_object_or_404
 
-from posts.models import (Followers, Ingredient, Recipe, Recipies_Ingredients,
-                          Tag, Shopping, Favorite_Recipe)
+from posts.models import (Favorite_Recipe, Followers, Ingredient, Recipe,
+                          RecipiesIngredients, Shopping, Tag)
 
 User = get_user_model()
 
@@ -33,7 +33,7 @@ class RecipeIngredientSerializer(serializers.ModelSerializer):
         source='ingredient.measurement_unit')
 
     class Meta:
-        model = Recipies_Ingredients
+        model = RecipiesIngredients
         fields = (
             'id', 'name', 'measurement_unit', 'amount'
         )
@@ -179,7 +179,7 @@ class RecipeWriteSerializer(serializers.ModelSerializer):
 
     def create_ingredients(self, ingredients, recipe):
         for ingredient in ingredients:
-            Recipies_Ingredients.objects.create(
+            RecipiesIngredients.objects.create(
                 recipe=recipe,
                 ingredient_id=ingredient.get('id'),
                 amount=ingredient.get('amount'), )
@@ -262,20 +262,6 @@ class RecipeReadSerializer(serializers.ModelSerializer):
 
     def get_is_in_shopping_cart(self, obj):
         return self.__is_something(obj, Shopping)
-
-    # def get_is_in_shopping_cart(self, obj):
-    #     """Находится ли рецепт в списке  покупок."""
-    #     user = self.context.get('request').user
-    #     if user.is_anonymous:
-    #         return False
-    #     return user.shopping_cart.filter(id=obj.id).exists()
-
-    # def get_is_favorited(self, obj):
-    #     """Находится ли рецепт в избранном."""
-    #     user = self.context.get('request').user
-    #     if user.is_anonymous:
-    #         return False
-    #     return user.favorite_recipe.filter(id=obj.id).exists()
 
     class Meta:
         model = Recipe

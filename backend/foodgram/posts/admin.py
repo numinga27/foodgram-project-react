@@ -2,7 +2,7 @@ from django.contrib import admin
 
 from .models import (Favorite_Recipe, Followers, Ingredient, Recipe, Shopping,
                      Tag)
-from .permession import Recipe_Ingredient_Admin
+from .permision import RecipeIngredientAdmin
 
 EMPTY_MSG = '-пусто-'
 
@@ -26,7 +26,7 @@ class RecipeAdmin(admin.ModelAdmin):
         'name', 'cooking_time',
         'author__email', 'ingredients__name')
     list_filter = ('pub_date', 'tags',)
-    inlines = (Recipe_Ingredient_Admin,)
+    inlines = (RecipeIngredientAdmin,)
     empty_value_display = EMPTY_MSG
 
     @admin.display(

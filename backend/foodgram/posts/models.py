@@ -75,7 +75,7 @@ class Recipe(models.Model):
     )
     ingredients = models.ManyToManyField(
         Ingredient,
-        through='Recipies_Ingredients'
+        through='RecipiesIngredients'
     )
     tags = models.ManyToManyField(
         Tag,
@@ -101,7 +101,7 @@ class Recipe(models.Model):
         return f'{self.author.email}, {self.name}'
 
 
-class Recipies_Ingredients(models.Model):
+class RecipiesIngredients(models.Model):
     recipe = models.ForeignKey(
         Recipe,
         on_delete=models.CASCADE,
