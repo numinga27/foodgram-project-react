@@ -90,7 +90,7 @@ class RecipesViewSet(viewsets.ModelViewSet):
         ).values(
             'ingredient__name',
             'ingredient__measurement_unit'
-        ).annotate(q=Sum('amount')).order_by()
+        ).annotate(quanty=Sum('amount')).order_by()
         filename = f'{request.user.username}_shopping_list.txt'
         shopping_list = (
             f'Список покупок \n'
@@ -98,7 +98,7 @@ class RecipesViewSet(viewsets.ModelViewSet):
         )
         for recipe in ingredient:
             shopping_list += (
-                f' {recipe["ingredient__name"]} - {recipe["q"]}'
+                f' {recipe["ingredient__name"]} - {recipe["quanty"]}'
                 f'{recipe["ingredient__measurement_unit"]}'
                 f'\n\n'
             )
