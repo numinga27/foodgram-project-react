@@ -1,5 +1,4 @@
 from django.contrib.auth.hashers import make_password
-from django.db.models import Sum
 from django.db.models.aggregates import Count, Sum
 from django.db.models.expressions import Exists, OuterRef, Value
 from django.http.response import HttpResponse
